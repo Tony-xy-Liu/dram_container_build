@@ -18,6 +18,12 @@ FROM ubuntu:jammy
 ENV CONDA_ENV "dram"
 COPY --from=build-env /opt/conda/envs/${CONDA_ENV} /opt/conda/envs/${CONDA_ENV}
 COPY --from=build-env /tini /tini
+COPY ./dram /opt/conda/envs/${CONDA_ENV}/bin/
+
+# add a slightly better launcher
+ARG VER
+RUN echo $VER>/opt/conda/envs/${CONDA_ENV}/bin/VERSION
+
 ENV PATH /opt/conda/envs/${CONDA_ENV}/bin:$PATH
 
 # singularity doesn't use the -s flag, and that causes warnings

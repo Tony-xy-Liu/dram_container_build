@@ -1,6 +1,7 @@
 NAME=dram-annotations
 DOCKER_IMAGE=quay.io/hallam_lab/$NAME
-echo image: $DOCKER_IMAGE
+VER=1.4.6
+echo image: $DOCKER_IMAGE:$VER
 echo ""
 
 HERE=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -10,17 +11,17 @@ case $1 in
         # change the url in python if not txyliu
         # build the docker container locally *with the cog db* (see above)
         cd docker 
-        docker build -t $DOCKER_IMAGE .
+        docker build --build-arg VER=$VER -t $DOCKER_IMAGE:$VER .
     ;;
     --push|-p)
         # login and push image to quay.io, remember to change the python constants in src/
         # sudo docker login quay.io
-	    docker push $DOCKER_IMAGE:latest
+	    docker push $DOCKER_IMAGE:$VER
     ;;
     --sif)
         # test build singularity
         cd test
-        singularity build $NAME.sif docker-daemon://$DOCKER_IMAGE:latest
+        singularity build $NAME.sif docker-daemon://$DOCKER_IMAGE:$VER
     ;;
     --run|-r)
         # test run docker image
@@ -33,16 +34,14 @@ case $1 in
             /bin/bash
     ;;
     -t)
-        #
-        # scratch space for testing stuff
-        #
-        cd $HERE/src
-        # # python -m simple_meta setup -ref $HERE/scratch/test1/ref -c docker
-        # python -m simple_meta run -ref $HERE/scratch/res -i SRR19573024 -o $HERE/scratch/test2/ws -t 16
-        # # --mock
-
-        # python -m simple_meta setup -ref $HERE/scratch/res -c singularity
-        python -m simple_meta run -r $HERE/scratch/res -i SRR19573024 -o $HERE/scratch/test3/ws -t 14
+        cd test
+        docker run -it --rm \
+            --mount type=bind,source="./mag_annotator",target="/opt/conda/envs/dram/lib/python3.10/site-packages/mag_annotator" \
+            --mount type=bind,source="./",target="/ws" \
+            --workdir="/ws" \
+            -u $(id -u):$(id -g) \
+            $DOCKER_IMAGE \
+            DRAM-setup.py prepare_databases --output_dir /ws
     ;;
     *)
         echo "bad option"
