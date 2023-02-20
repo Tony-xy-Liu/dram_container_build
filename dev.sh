@@ -1,5 +1,5 @@
 NAME=dram-annotations
-DOCKER_IMAGE=quay.io/txyliu/$NAME
+DOCKER_IMAGE=quay.io/hallam_lab/$NAME
 echo image: $DOCKER_IMAGE
 echo ""
 
